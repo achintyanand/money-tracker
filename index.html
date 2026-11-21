@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#080c14" />
+  <title>Aura Finance</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
+
+  <!-- Third-party libraries (versions pinned so updates can't break the app) -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="js/tailwind-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white pb-24 md:pb-12">
+  <!-- Sticky Top Bar Header -->
+  <header class="border-b border-slate-800/80 bg-brand-surface/90 sticky top-0 z-40 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo & App Brand -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/20 flex-shrink-0">
+          <i data-lucide="wallet" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">Aura Finance</span>
+            <span class="hidden sm:inline-block text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 font-semibold border border-indigo-500/20">Pro Tracker</span>
+          </div>
+          <div class="text-[11px] text-slate-400 md:hidden flex items-center gap-1 font-mono">
+            <span>Net:</span>
+            <span id="headerNetBalance" class="font-bold text-white">$0.00</span>
+          </div>
+        </div>
+      </div>
+      <!-- Desktop Tabs & Actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Desktop Nav Tabs -->
+        <nav class="hidden md:flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+          <button data-action="switch-tab" data-tab="dashboard" id="desktop-tab-dashboard" class="nav-tab is-active">Dashboard</button>
+          <button data-action="switch-tab" data-tab="transactions" id="desktop-tab-transactions" class="nav-tab">Transactions</button>
+          <button data-action="switch-tab" data-tab="analytics" id="desktop-tab-analytics" class="nav-tab">Analytics</button>
+          <button data-action="switch-tab" data-tab="categories" id="desktop-tab-categories" class="nav-tab">Categories</button>
+        </nav>
+        <!-- Currency Selector -->
+        <div class="flex items-center bg-slate-900 border border-slate-800 rounded-xl px-2 sm:px-2.5 py-1.5 text-xs text-slate-300">
+          <select id="currencySelector" class="bg-transparent text-slate-100 font-bold focus:outline-none cursor-pointer">
+            <option value="$" class="bg-slate-900 text-slate-200">$ USD</option>
+            <option value="₹" class="bg-slate-900 text-slate-200">₹ INR</option>
+            <option value="€" class="bg-slate-900 text-slate-200">€ EUR</option>
+            <option value="£" class="bg-slate-900 text-slate-200">£ GBP</option>
+          </select>
+        </div>
+        <!-- Add Transaction Desktop Button -->
+        <button data-action="open-transaction-modal" class="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/40 transition">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Add Transaction</span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl mx-auto w-full px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+    <!-- KPI Metric Cards Grid (Always prominent on Dashboard and Responsive) -->
+    <section id="kpiSection" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <!-- Total Balance Card -->
+      <div class="glass-card p-4 sm:p-5 rounded-2xl relative overflow-hidden group border border-indigo-500/20 col-span-2 sm:col-span-1">
+        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-indigo-500/20 transition"></div>
+        <div class="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+          <span class="text-[11px] sm:text-xs font-medium uppercase tracking-wider text-slate-300">Net Balance</span>
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+            <i data-lucide="scale" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </div>
+        </div>
+        <div class="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white" id="statBalance">$0.00</div>
+        <div class="text-[11px] text-slate-400 mt-1 sm:mt-2 truncate">Income vs. total expenses</div>
+      </div>
+      <!-- Total Income Card -->
+      <div class="glass-card p-4 sm:p-5 rounded-2xl relative overflow-hidden group">
+        <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-emerald-500/20 transition"></div>
+        <div class="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+          <span class="text-[11px] sm:text-xs font-medium uppercase tracking-wider text-emerald-400">Total Income</span>
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </div>
+        </div>
+        <div class="text-lg sm:text-2xl font-extrabold tracking-tight text-emerald-400" id="statIncome">$0.00</div>
+        <div class="text-[11px] text-slate-400 mt-1 truncate"><span id="incomeCount" class="font-semibold text-emerald-400">0</span> entries</div>
+      </div>
+      <!-- Total Expenses Card -->
+      <div class="glass-card p-4 sm:p-5 rounded-2xl relative overflow-hidden group">
+        <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-rose-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-rose-500/20 transition"></div>
+        <div class="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+          <span class="text-[11px] sm:text-xs font-medium uppercase tracking-wider text-rose-400">Expenses</span>
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center">
+            <i data-lucide="trending-down" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </div>
+        </div>
+        <div class="text-lg sm:text-2xl font-extrabold tracking-tight text-rose-400" id="statExpense">$0.00</div>
+        <div class="text-[11px] text-slate-400 mt-1 truncate"><span id="expenseCount" class="font-semibold text-rose-400">0</span> logged</div>
+      </div>
+      <!-- Savings Rate Card -->
+      <div class="glass-card p-4 sm:p-5 rounded-2xl relative overflow-hidden group col-span-2 sm:col-span-1">
+        <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-cyan-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-cyan-500/20 transition"></div>
+        <div class="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+          <span class="text-[11px] sm:text-xs font-medium uppercase tracking-wider text-cyan-400">Savings Rate</span>
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+            <i data-lucide="pie-chart" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </div>
+        </div>
+        <div class="text-lg sm:text-2xl font-extrabold tracking-tight text-cyan-400" id="statSavingsRate">0%</div>
+        <div class="text-[11px] text-slate-400 mt-1 truncate">Across <span id="categoryCount" class="text-slate-200 font-semibold">0</span> categories</div>
+      </div>
+    </section>
+    <!-- VIEW 1: DASHBOARD & OVERVIEW -->
+    <div id="view-dashboard" class="space-y-6">
+      <!-- Charts & Visual Summaries -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Donut Chart Breakdown -->
+        <div class="glass-card p-5 sm:p-6 rounded-2xl flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <i data-lucide="donut" class="w-4 h-4 text-indigo-400"></i>
+              <h2 class="text-sm font-semibold tracking-wide text-slate-200">Expense Allocation</h2>
+            </div>
+            <button data-action="switch-tab" data-tab="analytics" class="text-xs text-indigo-400 hover:text-indigo-300">Details &rarr;</button>
+          </div>
+          <div class="relative flex items-center justify-center w-full min-h-[200px] max-h-[220px] my-auto">
+            <canvas id="expenseChart" class="max-w-[210px] max-h-[210px]"></canvas>
+            <div id="chartCenterText" class="absolute flex flex-col items-center justify-center pointer-events-none text-center">
+              <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total Spent</span>
+              <span id="chartCenterAmount" class="text-sm sm:text-base font-extrabold text-white mt-0.5">$0</span>
+            </div>
+          </div>
+          <p class="text-center text-[11px] text-slate-400 mt-2" id="noExpensesChartMsg">No expenses recorded yet.</p>
+        </div>
+        <!-- Category Progress & Quick Breakdown -->
+        <div class="glass-card p-5 sm:p-6 rounded-2xl lg:col-span-2 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-400"></i>
+              <h2 class="text-sm font-semibold tracking-wide text-slate-200">Top Categories</h2>
+            </div>
+            <button data-action="open-category-modal" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1">
+              <span>+ Add Category</span>
+            </button>
+          </div>
+          <div id="dashboardCategoryProgress" class="flex-1 space-y-3 overflow-y-auto max-h-[220px] pr-1">
+            <!-- Dynamically populated categories -->
+          </div>
+        </div>
+      </section>
+      <!-- Quick Recent Transactions Preview -->
+      <section class="glass-card rounded-2xl p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <i data-lucide="clock" class="w-4 h-4 text-cyan-400"></i>
+            <h3 class="text-sm font-semibold text-slate-200">Recent Transactions</h3>
+          </div>
+          <button data-action="switch-tab" data-tab="transactions" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold">View All &rarr;</button>
+        </div>
+        <div id="recentTransactionsList" class="divide-y divide-slate-800/60">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+    </div>
+    <!-- VIEW 2: TRANSACTIONS & FILTERING -->
+    <div id="view-transactions" class="space-y-4 hidden">
+      <!-- Search, Scrollable Filter Chips, and Sorting -->
+      <div class="glass-card p-4 rounded-2xl space-y-3">
+        <!-- Search Bar -->
+        <div class="relative w-full">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search description, category, or note..." 
+            class="w-full glass-input pl-10 pr-4 py-2.5 rounded-xl text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none"
+          />
+        </div>
+        <!-- Horizontally Scrollable Type & Filter Chips -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 text-xs">
+          <button data-action="filter-type" data-value="ALL" id="chip-type-ALL" class="chip is-active">All Types</button>
+          <button data-action="filter-type" data-value="EXPENSE" id="chip-type-EXPENSE" class="chip">Expenses</button>
+          <button data-action="filter-type" data-value="INCOME" id="chip-type-INCOME" class="chip">Income</button>
+          <div class="h-4 w-[1px] bg-slate-800 mx-1 flex-shrink-0"></div>
+          <!-- Category Chips Container -->
+          <div id="categoryFilterChips" class="flex items-center gap-1.5 flex-nowrap">
+            <!-- Dynamically populated chips -->
+          </div>
+        </div>
+        <!-- Controls Row: Sort & Export -->
+        <div class="flex items-center justify-between gap-2 pt-1">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] text-slate-400 hidden sm:inline">Sort by:</span>
+            <select id="sortFilter" class="glass-input text-xs text-slate-300 px-2.5 py-1.5 rounded-lg focus:outline-none cursor-pointer">
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="amount-desc">Highest Amount</option>
+              <option value="amount-asc">Lowest Amount</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button data-action="export-csv" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Export as CSV">
+              <i data-lucide="download" class="w-4 h-4"></i>
+            </button>
+            <button data-action="export-json" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Backup as JSON">
+              <i data-lucide="file-code" class="w-4 h-4"></i>
+            </button>
+            <button data-action="reset-data" class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition" title="Reset Demo Data">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Transactions List (Mobile friendly Card/List View) -->
+      <div class="glass-card rounded-2xl overflow-hidden shadow-xl">
+        <div id="transactionsContainer" class="divide-y divide-slate-800/70">
+          <!-- Populated dynamically -->
+        </div>
+        <!-- Empty State Notice -->
+        <div id="noTransactionsNotice" class="hidden py-14 flex flex-col items-center justify-center text-center px-4">
+          <div class="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-400 mb-3">
+            <i data-lucide="receipt" class="w-6 h-6"></i>
+          </div>
+          <p class="text-sm font-semibold text-slate-300">No transactions match your criteria</p>
+          <p class="text-xs text-slate-500 mt-1">Try switching filters or add a new transaction.</p>
+        </div>
+      </div>
+    </div>
+    <!-- VIEW 3: ANALYTICS -->
+    <div id="view-analytics" class="space-y-6 hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Monthly Spending Breakdown Chart -->
+        <div class="glass-card p-5 sm:p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-400"></i>
+              <h3 class="text-sm font-semibold text-slate-200">Category Share</h3>
+            </div>
+            <span class="text-xs text-slate-400">Total Proportion</span>
+          </div>
+          <div class="relative flex items-center justify-center w-full min-h-[240px]">
+            <canvas id="analyticsDonutChart" class="max-w-[260px] max-h-[260px]"></canvas>
+          </div>
+        </div>
+        <!-- Bar chart or Category Breakdown List -->
+        <div class="glass-card p-5 sm:p-6 rounded-2xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+              <h3 class="text-sm font-semibold text-slate-200">Category Breakdown</h3>
+            </div>
+            <span class="text-xs text-slate-400">Amount & %</span>
+          </div>
+          <div id="analyticsCategoryList" class="space-y-3.5 overflow-y-auto max-h-[300px] pr-1">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- VIEW 4: CATEGORIES MANAGEMENT -->
+    <div id="view-categories" class="space-y-5 hidden">
+      <div class="glass-card p-5 sm:p-6 rounded-2xl">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="shapes" class="w-5 h-5 text-cyan-400"></i>
+              Category Management
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Customize categories, assign colors and custom emojis</p>
+          </div>
+          <button data-action="open-category-modal" class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-semibold text-white transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30">
+            <i data-lucide="plus" class="w-4 h-4"></i> New Category
+          </button>
+        </div>
+        <!-- Categories Grid -->
+        <div id="categoriesCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          <!-- Dynamically populated categories with spending info -->
+        </div>
+      </div>
+    </div>
+  </main>
+  <!-- Mobile Floating Action Button (FAB) -->
+  <button 
+    data-action="open-transaction-modal" 
+    class="md:hidden fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-2xl shadow-indigo-600/50 active:scale-95 transition-transform"
+    aria-label="Add transaction"
+  >
+    <i data-lucide="plus" class="w-6 h-6"></i>
+  </button>
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 glass-nav mobile-nav z-40 px-3 py-2">
+    <div class="flex items-center justify-around">
+      <button data-action="switch-tab" data-tab="dashboard" id="mobile-tab-dashboard" class="mobile-tab is-active">
+        <i data-lucide="layout-dashboard" class="w-5 h-5 mb-1"></i>
+        <span class="text-[10px] font-semibold">Home</span>
+      </button>
+      <button data-action="switch-tab" data-tab="transactions" id="mobile-tab-transactions" class="mobile-tab">
+        <i data-lucide="receipt-text" class="w-5 h-5 mb-1"></i>
+        <span class="text-[10px] font-medium">History</span>
+      </button>
+      <!-- Center empty gap or quick add hook -->
+      <div class="w-8"></div>
+      <button data-action="switch-tab" data-tab="analytics" id="mobile-tab-analytics" class="mobile-tab">
+        <i data-lucide="pie-chart" class="w-5 h-5 mb-1"></i>
+        <span class="text-[10px] font-medium">Analytics</span>
+      </button>
+      <button data-action="switch-tab" data-tab="categories" id="mobile-tab-categories" class="mobile-tab">
+        <i data-lucide="tags" class="w-5 h-5 mb-1"></i>
+        <span class="text-[10px] font-medium">Categories</span>
+      </button>
+    </div>
+  </nav>
+  <!-- ==================== MODALS & BOTTOM SHEETS ==================== -->
+  <!-- Add / Edit Transaction Modal / Mobile Bottom Sheet -->
+  <div id="transactionModal" class="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+    <div class="glass-card modal-bottom-sheet w-full md:max-w-lg md:rounded-2xl border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col">
+      <!-- Sheet Handle for Mobile -->
+      <div class="md:hidden flex justify-center pt-3 pb-1">
+        <div class="w-12 h-1.5 bg-slate-700 rounded-full"></div>
+      </div>
+      <div class="px-5 sm:px-6 py-3.5 border-b border-slate-800 flex items-center justify-between">
+        <h3 id="modalTxTitle" class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="circle-dollar-sign" class="w-5 h-5 text-indigo-400"></i>
+          Add New Transaction
+        </h3>
+        <button data-action="close-transaction-modal" class="p-1 rounded-lg text-slate-400 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="txForm" class="p-5 sm:p-6 space-y-4 overflow-y-auto max-h-[80vh]">
+        <input type="hidden" id="txId" />
+        <!-- Type Selector Tabs -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="btnTypeExpense" data-action="set-tx-type" data-value="EXPENSE" class="type-btn type-btn--expense is-active">
+              <i data-lucide="arrow-down-right" class="w-4 h-4"></i> Expense
+            </button>
+            <button type="button" id="btnTypeIncome" data-action="set-tx-type" data-value="INCOME" class="type-btn type-btn--income">
+              <i data-lucide="arrow-up-right" class="w-4 h-4"></i> Income
+            </button>
+          </div>
+          <input type="hidden" id="txType" value="EXPENSE" />
+        </div>
+        <!-- Description -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Title / Description</label>
+          <input type="text" id="txTitle" required placeholder="e.g. Grocery Store, Client Invoice" class="w-full glass-input px-3.5 py-2.5 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Amount -->
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Amount</label>
+            <div class="relative">
+              <span id="amountSymbol" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">$</span>
+              <input type="number" id="txAmount" required step="0.01" min="0.01" placeholder="0.00" class="w-full glass-input pl-8 pr-3.5 py-2.5 rounded-xl text-xs sm:text-sm text-white focus:outline-none" />
+            </div>
+          </div>
+          <!-- Category -->
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Category</label>
+            <select id="txCategory" required class="w-full glass-input px-3.5 py-2.5 rounded-xl text-xs sm:text-sm text-white focus:outline-none cursor-pointer">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+        </div>
+        <!-- Date & Notes -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Date</label>
+            <input type="date" id="txDate" required class="w-full glass-input px-3.5 py-2 rounded-xl text-xs sm:text-sm text-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Optional Note</label>
+            <input type="text" id="txNotes" placeholder="Payment method or tag..." class="w-full glass-input px-3.5 py-2 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none" />
+          </div>
+        </div>
+        <div class="pt-3 flex items-center justify-end gap-2.5 border-t border-slate-800">
+          <button type="button" data-action="close-transaction-modal" class="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition">Cancel</button>
+          <button type="submit" class="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition">Save Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Manage / Add Categories Modal / Bottom Sheet -->
+  <div id="categoryModal" class="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+    <div class="glass-card modal-bottom-sheet w-full md:max-w-lg md:rounded-2xl border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Mobile handle -->
+      <div class="md:hidden flex justify-center pt-3 pb-1">
+        <div class="w-12 h-1.5 bg-slate-700 rounded-full"></div>
+      </div>
+      <div class="px-5 sm:px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="tags" class="w-5 h-5 text-cyan-400"></i>
+          Category Manager
+        </h3>
+        <button data-action="close-category-modal" class="text-slate-400 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
+        <!-- Add New Category Subform -->
+        <div class="bg-slate-900/70 p-4 rounded-xl border border-slate-800 space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">Create New Category</h4>
+          <div class="grid grid-cols-12 gap-2">
+            <input type="text" id="newCatEmoji" placeholder="Emoji (e.g. 🍔)" maxlength="4" class="col-span-3 glass-input px-2 py-2 rounded-xl text-center text-sm text-white focus:outline-none" />
+            <input type="text" id="newCatName" placeholder="Category Name" class="col-span-6 glass-input px-3 py-2 rounded-xl text-xs sm:text-sm text-white focus:outline-none" />
+            <div class="col-span-3 flex items-center">
+              <input type="color" id="newCatColor" value="#6366f1" class="w-full h-9 rounded-xl cursor-pointer bg-slate-900 border border-slate-700" title="Select Color" />
+            </div>
+          </div>
+          <button type="button" data-action="add-category" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-semibold text-white transition flex items-center justify-center gap-2 shadow-md shadow-indigo-600/30">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Category
+          </button>
+        </div>
+        <!-- Categories List -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">Current Categories</h4>
+          <div id="categoryModalList" class="space-y-2">
+            <!-- Dynamic rows -->
+          </div>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-800 bg-slate-900/50 flex justify-end">
+        <button data-action="close-category-modal" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">Done</button>
+      </div>
+    </div>
+  </div>
+  <!-- Custom Alert / Confirm Modal (No Native Alerts) -->
+  <div id="alertModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
+    <div class="glass-card w-full max-w-sm rounded-2xl border border-slate-700 p-5 shadow-2xl text-center space-y-4">
+      <div id="alertIconWrapper" class="w-12 h-12 rounded-full mx-auto flex items-center justify-center bg-indigo-500/10 text-indigo-400">
+        <i data-lucide="alert-circle" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <h4 id="alertTitle" class="text-base font-bold text-white">Notice</h4>
+        <p id="alertMessage" class="text-xs text-slate-400 mt-1">Please confirm this action.</p>
+      </div>
+      <div class="flex items-center justify-center gap-2.5 pt-2">
+        <button id="alertBtnCancel" data-action="close-alert" class="w-1/2 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300">Cancel</button>
+        <button id="alertBtnConfirm" class="w-1/2 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App scripts (order matters: each file only depends on the ones above it) -->
+  <script src="js/constants.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/views.js"></script>
+  <script src="js/modals.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
